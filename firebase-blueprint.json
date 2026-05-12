@@ -1,0 +1,134 @@
+{
+  "entities": {
+    "Goal": {
+      "title": "Goal",
+      "description": "A long-term or mid-term objective for the user.",
+      "type": "object",
+      "properties": {
+        "category": { "type": "string" },
+        "horizon": { "type": "string" },
+        "objective": { "type": "string" },
+        "metric": { "type": "string" },
+        "targetValue": { "type": "string" },
+        "deadline": { "type": "string" },
+        "progress": { "type": "number" },
+        "priority": { "type": "string" },
+        "status": { "type": "string" },
+        "relatedGoals": { "type": "array", "items": { "type": "string" } },
+        "impactOnBusiness": { "type": "string" },
+        "revenueSource": { "type": "string" },
+        "marginPercentage": { "type": "number" },
+        "description": { "type": "string" },
+        "userId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["objective", "category", "horizon", "priority", "status", "userId"]
+    },
+    "ActionPlan": {
+      "title": "Action Plan",
+      "description": "Specific actions tied to a goal.",
+      "type": "object",
+      "properties": {
+        "goalId": { "type": "string" },
+        "action": { "type": "string" },
+        "type": { "type": "string" },
+        "impact": { "type": "string" },
+        "timeRequired": { "type": "string" },
+        "expectedResult": { "type": "string" },
+        "userId": { "type": "string" }
+      },
+      "required": ["goalId", "action", "userId"]
+    },
+    "Habit": {
+      "title": "Habit",
+      "description": "A recurring action to form a habit.",
+      "type": "object",
+      "properties": {
+        "habit": { "type": "string" },
+        "goalId": { "type": "string" },
+        "frequency": { "type": "string" },
+        "type": { "type": "string" },
+        "suggestedTime": { "type": "string" },
+        "trigger": { "type": "string" },
+        "reward": { "type": "string" },
+        "targetCount": { "type": "number" },
+        "trackingUnit": { "type": "string" },
+        "dailyGoal": { "type": "number" },
+        "completedDates": { "type": "array", "items": { "type": "string" } },
+        "completions": { "type": "object" },
+        "icon": { "type": "string" },
+        "color": { "type": "string" },
+        "area": { "type": "string" },
+        "userId": { "type": "string" }
+      },
+      "required": ["habit", "userId"]
+    },
+    "DailyTracking": {
+      "title": "Daily Tracking",
+      "description": "Journaling and daily summary.",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string" },
+        "completedHabits": { "type": "array", "items": { "type": "string" } },
+        "energyLevel": { "type": "number" },
+        "notes": { "type": "string" },
+        "userId": { "type": "string" }
+      },
+      "required": ["date", "userId"]
+    },
+    "Reward": {
+      "title": "Reward",
+      "description": "Rewards to motivate the user.",
+      "type": "object",
+      "properties": {
+        "condition": { "type": "string" },
+        "reward": { "type": "string" },
+        "type": { "type": "string" },
+        "status": { "type": "string" },
+        "costXP": { "type": "number" },
+        "triggerType": { "type": "string" },
+        "category": { "type": "string" },
+        "userId": { "type": "string" }
+      },
+      "required": ["reward", "condition", "status", "userId"]
+    },
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "User specific data and points.",
+      "type": "object",
+      "properties": {
+        "points": { "type": "number" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{userId}/goals/{goalId}": {
+      "schema": "Goal",
+      "description": "User's goals"
+    },
+    "/users/{userId}/actionPlans/{actionId}": {
+      "schema": "ActionPlan",
+      "description": "Action plans for goals"
+    },
+    "/users/{userId}/habits/{habitId}": {
+      "schema": "Habit",
+      "description": "User's habits"
+    },
+    "/users/{userId}/tracking/{trackingId}": {
+      "schema": "DailyTracking",
+      "description": "Daily tracking logs (trackingId is date string)"
+    },
+    "/users/{userId}/rewards/{rewardId}": {
+      "schema": "Reward",
+      "description": "Available rewards"
+    },
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User settings and profile"
+    }
+  }
+}

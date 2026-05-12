@@ -1,0 +1,128 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helpers ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- Validation Helpers ---
+
+    function isValidGoal(data) {
+      return data.keys().hasAll(['objective', 'category', 'horizon', 'priority', 'status', 'userId'])
+        && data.keys().size() <= 20
+        && data.objective is string && data.objective.size() <= 500
+        && data.category is string && data.category.size() <= 100
+        && data.horizon is string && data.horizon.size() <= 100
+        && data.priority is string && data.priority.size() <= 50
+        && data.status is string && data.status.size() <= 50
+        && data.userId == request.auth.uid;
+    }
+
+    function isValidActionPlan(data) {
+      return data.keys().hasAll(['goalId', 'action', 'userId'])
+        && data.keys().size() <= 15
+        && data.goalId is string && data.goalId.size() <= 128
+        && data.action is string && data.action.size() <= 500
+        && data.userId == request.auth.uid;
+    }
+
+    function isValidHabit(data) {
+      return data.keys().hasAll(['habit', 'userId'])
+        && data.keys().size() <= 30
+        && data.habit is string && data.habit.size() <= 500
+        && data.userId == request.auth.uid
+        && (data.get('completedDates', []).size() <= 5000);
+    }
+
+    function isValidDailyTracking(data) {
+      return data.keys().hasAll(['date', 'userId'])
+        && data.keys().size() <= 10
+        && data.date is string && data.date.size() <= 50
+        && data.userId == request.auth.uid;
+    }
+
+    function isValidReward(data) {
+      return data.keys().hasAll(['reward', 'condition', 'status', 'userId'])
+        && data.keys().size() <= 20
+        && data.reward is string && data.reward.size() <= 500
+        && data.condition is string && data.condition.size() <= 500
+        && data.status is string && data.status.size() <= 50
+        && data.userId == request.auth.uid;
+    }
+
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['points'])
+        && data.keys().size() <= 10
+        && data.points is number && data.points >= 0;
+    }
+
+    // --- Match Rules ---
+
+    match /_connection_test_/{docId} {
+      allow read: if true;
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUserProfile(incoming());
+      allow update: if isOwner(userId) && isValidUserProfile(incoming());
+
+      match /goals/{goalId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidGoal(incoming());
+        allow update: if isOwner(userId) && isValidGoal(incoming());
+        allow delete: if isOwner(userId);
+      }
+
+      match /actionPlans/{actionId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidActionPlan(incoming());
+        allow update: if isOwner(userId) && isValidActionPlan(incoming());
+        allow delete: if isOwner(userId);
+      }
+
+      match /habits/{habitId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidHabit(incoming());
+        allow update: if isOwner(userId) && isValidHabit(incoming());
+        allow delete: if isOwner(userId);
+      }
+
+      match /tracking/{trackingId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidDailyTracking(incoming());
+        allow update: if isOwner(userId) && isValidDailyTracking(incoming());
+        allow delete: if isOwner(userId);
+      }
+
+      match /rewards/{rewardId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidReward(incoming());
+        allow update: if isOwner(userId) && isValidReward(incoming());
+        allow delete: if isOwner(userId);
+      }
+    }
+  }
+}
