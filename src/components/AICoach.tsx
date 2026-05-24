@@ -75,6 +75,11 @@ export default function AICoach({ habits, goals, user }: AICoachProps) {
         text: m.text
       }));
 
+      const persona = localStorage.getItem('ai_coach_persona') || 'sabio';
+      const customInstruction = localStorage.getItem('ai_coach_custom_instruction') || '';
+      const maxLengthRule = localStorage.getItem('ai_coach_max_length') || 'short';
+      const model = localStorage.getItem('ai_coach_model') || 'gemini-3.5-flash';
+
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -84,7 +89,11 @@ export default function AICoach({ habits, goals, user }: AICoachProps) {
           message: userText,
           history: historyPayload,
           habits,
-          goals
+          goals,
+          persona,
+          customInstruction,
+          maxLengthRule,
+          model
         })
       });
 
@@ -157,7 +166,7 @@ export default function AICoach({ habits, goals, user }: AICoachProps) {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed bottom-24 lg:bottom-6 right-6 z-50">
       {/* Floating Action Button */}
       <motion.button
         id="ai-fab-button"

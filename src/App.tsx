@@ -21,7 +21,8 @@ import {
   Sparkles,
   LogIn,
   LogOut,
-  Smartphone
+  Smartphone,
+  Settings
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { onAuthStateChanged, User, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
@@ -39,6 +40,7 @@ import TodayView from './components/TodayView';
 import HabitDetailView from './components/HabitDetailView';
 import AndroidHub from './components/AndroidHub';
 import AICoach from './components/AICoach';
+import SettingsModal from './components/SettingsModal';
 import { auth, signInWithGoogle } from './lib/firebase';
 import { dbService } from './services/dbService';
 import { INITIAL_GOALS, ACTION_PLANS, HABITS, REWARDS, DAILY_TRACKING_EXAMPLES } from './mockData';
@@ -67,6 +69,7 @@ export default function App() {
   const [points, setPoints] = useState(0); 
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [activeTab, setActiveTab] = useState('today');
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const handleLocalMode = () => {
     try {
@@ -534,10 +537,10 @@ export default function App() {
 
           <button
             onClick={handleGoogleSignIn}
-            className="w-full bg-white/5 border border-white/5 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-3 hover:bg-white/10 transition-all duration-300 active:scale-[0.98] cursor-pointer"
+            className="w-full bg-white text-slate-900 border border-slate-200 font-bold py-3.5 px-4 rounded-2xl flex items-center justify-center gap-3 hover:bg-slate-50 hover:shadow-lg hover:shadow-white/5 focus:ring-2 focus:ring-yellow-500/20 active:scale-[0.98] transition-all duration-300 cursor-pointer text-xs uppercase tracking-wider"
           >
-            <img src="https://www.google.com/favicon.ico" className="w-5 h-5" alt="Google" />
-            GOOGLE
+            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" className="w-5 h-5" alt="Google" />
+            Continuar con Google
           </button>
 
           <button
@@ -637,6 +640,39 @@ export default function App() {
 
       {/* Main Content */}
       <main className="flex-1 overflow-x-hidden overflow-y-auto pb-24 lg:pb-0">
+        {/* Top Header Bar with Actions & Adjustments */}
+        <div className="max-w-6xl mx-auto px-6 pt-6 flex items-center justify-between border-b border-white/5 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="lg:hidden w-8 h-8 bg-[#ffcc00] rounded-lg flex items-center justify-center">
+              <Zap size={18} className="text-black fill-black" />
+            </div>
+            <div>
+              <span className="text-[10px] font-black tracking-widest text-slate-500 hover:text-[#ffcc00] uppercase block cursor-default">HabitFlow OS</span>
+              <h1 className="text-xl font-bold text-white transition-colors uppercase select-none">
+                {activeTab === 'today' ? 'Hoy' : activeTab === 'dashboard' ? 'Semana' : activeTab === 'goals' ? 'Objetivos' : activeTab === 'habits' ? 'Actividades' : activeTab === 'rewards' ? 'Premios' : activeTab === 'android' ? 'Móvil App' : 'HabitFlow'}
+              </h1>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2.5">
+            {/* XP Points Tracker Pill */}
+            <div className="bg-yellow-500/5 border border-yellow-500/10 rounded-2xl px-3 sm:px-4 py-2 flex items-center gap-2 select-none">
+              <Star size={13} className="text-[#ffcc00] fill-[#ffcc00]" />
+              <span className="text-xs font-black text-[#ffcc00] tracking-tight">{points} XP</span>
+            </div>
+
+            {/* Ajustes Button Trigger */}
+            <button
+              onClick={() => setIsSettingsOpen(true)}
+              className="p-2 sm:px-4 sm:py-2 bg-white/5 border border-white/5 hover:border-[#ffcc00]/40 hover:bg-[#ffcc00]/10 rounded-2xl text-slate-400 hover:text-[#ffcc00] transition-all duration-300 cursor-pointer flex items-center gap-2 group shadow-xl"
+              title="Ajustes y Configuración"
+            >
+              <Settings size={16} className="group-hover:rotate-45 transition-transform duration-300" />
+              <span className="hidden sm:inline text-xs font-black uppercase tracking-wider">Ajustes</span>
+            </button>
+          </div>
+        </div>
+
         <div className="max-w-6xl mx-auto py-8">
           <AnimatePresence mode="wait">
             <motion.div
@@ -675,6 +711,23 @@ export default function App() {
 
       {/* Floating AI Assistant Coach */}
       <AICoach habits={habits} goals={goals} user={user} />
+
+      {/* Global Config Settings Dashboard Modal */}
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        onSignOut={handleSignOut}
+        user={user}
+        isLocalGuest={isLocalGuest}
+        points={points}
+        setPoints={setPoints}
+        habits={habits}
+        setHabits={setHabits}
+        goals={goals}
+        setGoals={setGoals}
+        rewards={rewards}
+        setRewards={setRewards}
+      />
     </div>
   );
 }
