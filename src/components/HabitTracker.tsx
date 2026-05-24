@@ -195,7 +195,7 @@ export default function HabitTracker({ habits, goals, tracking, areas, onAddHabi
         <div className="hidden lg:block bg-[#0d0d0d] rounded-[32px] border border-white/5 overflow-hidden">
           <table className="w-full text-left">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-100">
+              <tr className="bg-black/45 border-b border-white/5">
                 <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Hábito</th>
                 <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Meta Asociada</th>
                 <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Frecuencia</th>
@@ -204,7 +204,7 @@ export default function HabitTracker({ habits, goals, tracking, areas, onAddHabi
                 <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Recompensa</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-white/5">
               {habits.map((habit) => {
                 const goal = goals.find(g => g.id === habit.goalId);
                 return (
@@ -346,12 +346,12 @@ export default function HabitTracker({ habits, goals, tracking, areas, onAddHabi
                         <select 
                           value={showNewAreaInput ? 'NEW' : newHabit.area}
                           onChange={handleAreaChange}
-                          className="bg-transparent flex-1 text-sm text-slate-200 outline-none appearance-none font-bold"
+                          className="bg-[#0d0d0d] flex-1 text-sm text-slate-200 outline-none appearance-none font-bold"
                         >
                           {areas.map(area => (
-                            <option key={area} value={area}>{area}</option>
+                            <option key={area} value={area} className="bg-[#111111] text-white">{area}</option>
                           ))}
-                          <option value="NEW">+ Nueva área...</option>
+                          <option value="NEW" className="bg-[#111111] text-white">+ Nueva área...</option>
                         </select>
                         <ChevronDown size={16} className="text-slate-600 pointer-events-none absolute right-4" />
                       </div>

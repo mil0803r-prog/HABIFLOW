@@ -541,12 +541,12 @@ export default function GoalsModule({ goals, habits, activeDate, areas, onAddAre
                         <select 
                           value={showNewAreaInput ? 'NEW' : newGoal.area}
                           onChange={handleAreaChange}
-                          className="bg-transparent flex-1 text-sm outline-none font-bold appearance-none cursor-pointer"
+                          className="bg-[#0d0d0d] flex-1 text-sm outline-none font-bold appearance-none cursor-pointer"
                         >
                           {areas.map(area => (
-                            <option key={area} value={area}>{area}</option>
+                            <option key={area} value={area} className="bg-[#111111] text-white">{area}</option>
                           ))}
-                          <option value="NEW">+ Nueva área...</option>
+                          <option value="NEW" className="bg-[#111111] text-white">+ Nueva área...</option>
                         </select>
                         <ChevronDown size={16} className="text-slate-600 pointer-events-none absolute right-4" />
                       </div>

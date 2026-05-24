@@ -346,10 +346,10 @@ export default function RewardsModule({
                         <select 
                           value={newReward.category}
                           onChange={(e) => updateConditionTemplate(newReward.triggerType || 'diario', e.target.value)}
-                          className="bg-transparent flex-1 text-white font-bold outline-none appearance-none cursor-pointer"
+                          className="bg-[#0d0d0d] flex-1 text-white font-bold outline-none appearance-none cursor-pointer"
                         >
                           {areas.map(area => (
-                            <option key={area} value={area}>{area}</option>
+                            <option key={area} value={area} className="bg-[#111111] text-white">{area}</option>
                           ))}
                         </select>
                         <ChevronDown size={14} className="absolute right-5 text-slate-600 pointer-events-none" />
@@ -365,12 +365,12 @@ export default function RewardsModule({
                         <select 
                           value={newReward.triggerType}
                           onChange={(e) => updateConditionTemplate(e.target.value, newReward.category || areas[0])}
-                          className="bg-transparent flex-1 text-white font-bold outline-none appearance-none cursor-pointer"
+                          className="bg-[#0d0d0d] flex-1 text-white font-bold outline-none appearance-none cursor-pointer"
                         >
-                          <option value="diario">Diario</option>
-                          <option value="semanal">Semanal</option>
-                          <option value="trimestral">Trimestral</option>
-                          <option value="anual">Anual</option>
+                          <option value="diario" className="bg-[#111111] text-white">Diario</option>
+                          <option value="semanal" className="bg-[#111111] text-white">Semanal</option>
+                          <option value="trimestral" className="bg-[#111111] text-white">Trimestral</option>
+                          <option value="anual" className="bg-[#111111] text-white">Anual</option>
                         </select>
                         <ChevronDown size={14} className="absolute right-5 text-slate-600 pointer-events-none" />
                       </div>

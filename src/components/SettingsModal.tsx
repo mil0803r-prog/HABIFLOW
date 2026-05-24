@@ -246,6 +246,46 @@ export default function SettingsModal({
           </div>
         )}
 
+        {/* User Account Info Bar */}
+        <div className="mx-6 mt-4 p-3.5 bg-white/[0.02] border border-white/5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-gradient-to-r from-yellow-500/[0.02] to-transparent">
+          <div className="flex items-center gap-3">
+            {!isLocalGuest && user ? (
+              <div className="w-9 h-9 rounded-full bg-yellow-500/10 border border-[#ffcc00]/30 flex items-center justify-center p-0.5 shrink-0 overflow-hidden">
+                <img 
+                  src={user.photoURL || "https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg"} 
+                  className="w-full h-full rounded-full object-cover" 
+                  alt="Avatar" 
+                  referrerPolicy="no-referrer" 
+                />
+              </div>
+            ) : (
+              <div className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 font-bold text-sm shrink-0 uppercase select-none">
+                {user?.email ? user.email[0] : 'I'}
+              </div>
+            )}
+            <div className="text-left">
+              <span className="text-[9px] font-black tracking-widest text-slate-500 uppercase block leading-none mb-1">Usuario Activo</span>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-xs font-bold text-white block">
+                  {!isLocalGuest && user ? user.email : 'Modo Invitado (Datos Locales)'}
+                </span>
+                {!isLocalGuest && user && (
+                  <span className="bg-[#ffcc00]/10 text-[#ffcc00] text-[8px] px-1.5 py-0.5 rounded font-black uppercase tracking-tight">
+                    Google
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 self-stretch sm:self-auto justify-between sm:justify-end">
+            <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${
+              !isLocalGuest && user ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-[#ffcc00]/10 text-[#ffcc00] border border-[#ffcc00]/20'
+            }`}>
+              {!isLocalGuest && user ? '☁ Sincronizado' : '💾 Almacenamiento Local'}
+            </span>
+          </div>
+        </div>
+
         {/* Modal Navigation Sub-Tabs */}
         <div className="flex gap-1.5 px-6 pt-4 border-b border-white/5">
           <button

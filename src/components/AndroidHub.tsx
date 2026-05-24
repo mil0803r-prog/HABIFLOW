@@ -828,8 +828,13 @@ export default function AndroidHub({ habits, goals, points }: AndroidHubProps) {
                     </div>
 
                     <div className="flex flex-col items-center gap-1" onClick={() => setSimulatorMode('app')}>
-                      <div className="w-10 h-10 bg-[#ffcc00] rounded-2xl flex items-center justify-center text-black border border-white/5 cursor-pointer shadow-lg shadow-[#ffcc00]/20" style={{ backgroundColor: selectedWallpaper.primary }}>
-                        <Zap size={18} className="text-black fill-black" />
+                      <div className="w-10 h-10 bg-[#ffcc00] rounded-xl flex items-center justify-center border border-white/10 cursor-pointer shadow-lg shadow-[#ffcc00]/20 overflow-hidden" style={{ backgroundColor: selectedWallpaper.primary }}>
+                        <img 
+                          src="/habit_icon.png" 
+                          className="w-full h-full object-cover" 
+                          alt="HabitFlow" 
+                          referrerPolicy="no-referrer"
+                        />
                       </div>
                       <span className="text-[8px] text-white font-black tracking-wide truncate max-w-[55px] text-shadow-md">HabitFlow</span>
                     </div>
@@ -844,8 +849,15 @@ export default function AndroidHub({ habits, goals, points }: AndroidHubProps) {
                   {/* Running App Navbar */}
                   <div className="pt-9 pb-3 px-4 bg-[#0d0d0f] border-b border-white/5 flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
-                      <Zap size={14} className="text-[#ffcc00] fill-[#ffcc00]" style={{ color: selectedWallpaper.primary, fill: selectedWallpaper.primary }} />
-                      <span className="text-[11px] font-extrabold tracking-tight">HABITFLOW</span>
+                      <div className="w-4 h-4 rounded overflow-hidden">
+                        <img 
+                          src="/habit_icon.png" 
+                          className="w-full h-full object-cover" 
+                          alt="Logo" 
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+                      <span className="text-[11px] font-extrabold tracking-tight font-sans text-white">HABITFLOW</span>
                     </div>
                     <span className="text-[9px] px-2 py-0.5 bg-white/5 hover:bg-white/10 rounded-full border border-white/10 font-bold" style={{ color: selectedWallpaper.primary }}>
                       {points} XP
