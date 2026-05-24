@@ -20,7 +20,8 @@ import {
   Star,
   Sparkles,
   LogIn,
-  LogOut
+  LogOut,
+  Smartphone
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { onAuthStateChanged, User, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
@@ -36,6 +37,8 @@ import RewardsModule from './components/RewardsModule';
 import AlertsModule from './components/AlertsModule';
 import TodayView from './components/TodayView';
 import HabitDetailView from './components/HabitDetailView';
+import AndroidHub from './components/AndroidHub';
+import AICoach from './components/AICoach';
 import { auth, signInWithGoogle } from './lib/firebase';
 import { dbService } from './services/dbService';
 import { INITIAL_GOALS, ACTION_PLANS, HABITS, REWARDS, DAILY_TRACKING_EXAMPLES } from './mockData';
@@ -49,6 +52,14 @@ export default function App() {
   const [isRegistering, setIsRegistering] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(false);
+  
+  const [isLocalGuest, setIsLocalGuest] = useState(() => {
+    try {
+      return localStorage.getItem('force_local_mode') === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
 
   const [activeDate, setActiveDate] = useState(new Date(2026, 4, 10)); // May 10, 2026
   const [habits, setHabits] = useState<Habit[]>([]);
@@ -57,41 +68,124 @@ export default function App() {
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [activeTab, setActiveTab] = useState('today');
 
+  const handleLocalMode = () => {
+    try {
+      localStorage.setItem('force_local_mode', 'true');
+    } catch (e) {}
+    dbService.isLocalOnly = true;
+    setIsLocalGuest(true);
+    
+    const dummyUser = {
+      uid: 'guest_user',
+      displayName: 'Usuario Local',
+      email: 'local@habitflow.com',
+      emailVerified: true,
+      isAnonymous: true,
+    } as any;
+    setUser(dummyUser);
+    
+    const cachedGoals = localStorage.getItem(`goals_fallback_guest_user`);
+    const cachedHabits = localStorage.getItem(`habits_fallback_guest_user`);
+    const cachedRewards = localStorage.getItem(`rewards_fallback_guest_user`);
+    const cachedPoints = localStorage.getItem(`points_fallback_guest_user`);
+
+    setGoals(cachedGoals ? JSON.parse(cachedGoals) : INITIAL_GOALS);
+    setHabits(cachedHabits ? JSON.parse(cachedHabits) : HABITS);
+    setRewards(cachedRewards ? JSON.parse(cachedRewards) : REWARDS);
+    setPoints(cachedPoints ? parseInt(cachedPoints, 10) : 1250);
+    setLoading(false);
+  };
+
+  const handleSignOut = async () => {
+    if (isLocalGuest) {
+      try {
+        localStorage.removeItem('force_local_mode');
+      } catch (e) {}
+      dbService.isLocalOnly = false;
+      setIsLocalGuest(false);
+      setUser(null);
+    } else {
+      await signOut(auth);
+    }
+  };
+
   useEffect(() => {
+    if (isLocalGuest) {
+      dbService.isLocalOnly = true;
+      const dummyUser = {
+        uid: 'guest_user',
+        displayName: 'Usuario Local',
+        email: 'local@habitflow.com',
+        emailVerified: true,
+        isAnonymous: true,
+      } as any;
+      setUser(dummyUser);
+      
+      const cachedGoals = localStorage.getItem(`goals_fallback_guest_user`);
+      const cachedHabits = localStorage.getItem(`habits_fallback_guest_user`);
+      const cachedRewards = localStorage.getItem(`rewards_fallback_guest_user`);
+      const cachedPoints = localStorage.getItem(`points_fallback_guest_user`);
+
+      setGoals(cachedGoals ? JSON.parse(cachedGoals) : INITIAL_GOALS);
+      setHabits(cachedHabits ? JSON.parse(cachedHabits) : HABITS);
+      setRewards(cachedRewards ? JSON.parse(cachedRewards) : REWARDS);
+      setPoints(cachedPoints ? parseInt(cachedPoints, 10) : 1250);
+      setLoading(false);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
       if (user) {
-        // Load data
-        const [fetchedGoals, fetchedHabits, fetchedRewards, profile] = await Promise.all([
-          dbService.getGoals(),
-          dbService.getHabits(),
-          dbService.getRewards(),
-          dbService.getUserProfile()
-        ]);
-
-        if (fetchedGoals.length === 0 && fetchedHabits.length === 0) {
-          // Initialize with mock data if new user
-          await Promise.all([
-            ...INITIAL_GOALS.map(g => dbService.saveGoal(g)),
-            ...HABITS.map(h => dbService.saveHabit(h)),
-            ...REWARDS.map(r => dbService.saveReward(r)),
-            dbService.updateUserProfile({ points: 1250 })
+        try {
+          // Load data safely
+          const [fetchedGoals, fetchedHabits, fetchedRewards, profile] = await Promise.all([
+            dbService.getGoals(),
+            dbService.getHabits(),
+            dbService.getRewards(),
+            dbService.getUserProfile()
           ]);
-          setGoals(INITIAL_GOALS);
-          setHabits(HABITS);
-          setRewards(REWARDS);
-          setPoints(1250);
-        } else {
-          setGoals(fetchedGoals);
-          setHabits(fetchedHabits);
-          setRewards(fetchedRewards);
-          setPoints(profile?.points || 0);
+
+          if (fetchedGoals.length === 0 && fetchedHabits.length === 0) {
+            // Initialize with mock data if new user
+            try {
+              await Promise.all([
+                ...INITIAL_GOALS.map(g => dbService.saveGoal(g)),
+                ...HABITS.map(h => dbService.saveHabit(h)),
+                ...REWARDS.map(r => dbService.saveReward(r)),
+                dbService.updateUserProfile({ points: 1250 })
+              ]);
+            } catch (err) {
+              console.warn("Failed to initialize server-side mock data:", err);
+            }
+            setGoals(INITIAL_GOALS);
+            setHabits(HABITS);
+            setRewards(REWARDS);
+            setPoints(1250);
+          } else {
+            setGoals(fetchedGoals);
+            setHabits(fetchedHabits);
+            setRewards(fetchedRewards);
+            setPoints(profile?.points || 0);
+          }
+        } catch (error) {
+          console.error("Firestore loading error, falling back to local fallback data:", error);
+          // Try to load any local state, or use default mocks
+          const cachedGoals = localStorage.getItem(`goals_fallback_${user.uid}`);
+          const cachedHabits = localStorage.getItem(`habits_fallback_${user.uid}`);
+          const cachedRewards = localStorage.getItem(`rewards_fallback_${user.uid}`);
+          const cachedPoints = localStorage.getItem(`points_fallback_${user.uid}`);
+
+          setGoals(cachedGoals ? JSON.parse(cachedGoals) : INITIAL_GOALS);
+          setHabits(cachedHabits ? JSON.parse(cachedHabits) : HABITS);
+          setRewards(cachedRewards ? JSON.parse(cachedRewards) : REWARDS);
+          setPoints(cachedPoints ? parseInt(cachedPoints, 10) : 1250);
         }
       }
       setLoading(false);
     });
     return () => unsubscribe();
-  }, []);
+  }, [isLocalGuest]);
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,6 +208,23 @@ export default function App() {
       else if (error.code === 'auth/weak-password') message = 'La contraseña es muy débil (mínimo 6 caracteres)';
       else if (error.message) message = error.message;
       setAuthError(message);
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setAuthError(null);
+    setAuthLoading(true);
+    try {
+      await signInWithGoogle();
+    } catch (error: any) {
+      console.error('Google sign-in error:', error);
+      if (error?.code === 'auth/unauthorized-domain' || (error?.message && error.message.includes('unauthorized-domain'))) {
+        setAuthError('UNAUTHORIZED_DOMAIN_ERROR');
+      } else {
+        setAuthError(error?.message || 'Error al iniciar sesión con Google');
+      }
     } finally {
       setAuthLoading(false);
     }
@@ -197,7 +308,7 @@ export default function App() {
     { id: 'goals', label: 'Objetivos', icon: Target },
     { id: 'habits', label: 'Actividades', icon: Star },
     { id: 'rewards', label: 'Premios', icon: Gift },
-    // ... rest of items (hidden in mobile footer)
+    { id: 'android', label: 'Móvil App', icon: Smartphone }
   ];
 
   const renderContent = () => {
@@ -284,6 +395,7 @@ export default function App() {
         />
       );
       case 'alerts': return <AlertsModule tracking={DAILY_TRACKING_EXAMPLES} goals={goals} />;
+      case 'android': return <AndroidHub habits={habits} goals={goals} points={points} />;
       default: return <Dashboard goals={goals} tracking={DAILY_TRACKING_EXAMPLES} habits={habits} activeDate={activeDate} />;
     }
   };
@@ -351,9 +463,53 @@ export default function App() {
             </div>
 
             {authError && (
-              <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-xs py-3 px-4 rounded-xl font-medium">
-                {authError}
-              </div>
+              authError === 'UNAUTHORIZED_DOMAIN_ERROR' ? (
+                <div className="bg-amber-500/10 border border-amber-500/20 text-slate-200 text-xs py-4 px-4 rounded-2xl text-left font-medium space-y-3.5 shadow-xl">
+                  <div className="flex items-start gap-2.5">
+                    <AlertTriangle className="text-[#ffcc00] shrink-0 mt-0.5" size={18} />
+                    <div>
+                      <strong className="text-white text-xs font-black uppercase tracking-wider block mb-1">Dominio No Autorizado en Firebase</strong>
+                      <span className="text-slate-400 text-[11px] leading-relaxed block">
+                        Google OAuth rechaza el inicio de sesión porque el dominio actual no está agregado en los dominios autorizados en la Consola de tu Firebase.
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-black/40 border border-white/5 rounded-xl p-3 space-y-2">
+                    <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider block">Pasos para autorizar:</span>
+                    <ol className="list-decimal list-inside text-slate-300 space-y-1 text-[10px] leading-relaxed">
+                      <li>Abre la <a href="https://console.firebase.google.com/project/habit-flow-f524f/authentication/settings" target="_blank" rel="noopener noreferrer" className="text-[#ffcc00] font-extrabold underline inline-flex items-center gap-0.5">Configuración de Firebase Auth</a>.</li>
+                      <li>Haz clic en <strong>"Agregar dominio"</strong> (Authorized domains).</li>
+                      <li>Copia y agrega este valor:</li>
+                    </ol>
+                    <div className="flex items-center gap-1.5 mt-2 bg-[#111] p-2 rounded-lg border border-white/5 justify-between">
+                      <code className="text-[10px] font-mono text-[#ffcc00] truncate select-all">{window.location.hostname}</code>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(window.location.hostname);
+                          alert('¡Copiado con éxito!');
+                        }}
+                        className="bg-white/10 hover:bg-[#ffcc00] hover:text-black px-2 py-1 rounded text-[9px] font-extrabold uppercase text-white transition-all cursor-pointer"
+                      >
+                        Copiar
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <button
+                    type="button"
+                    onClick={() => setAuthError(null)}
+                    className="w-full bg-[#ffcc00]/10 hover:bg-[#ffcc00]/20 border border-[#ffcc00]/20 text-[#ffcc00] font-black py-2.5 rounded-xl text-[10px] uppercase tracking-wider transition-all cursor-pointer"
+                  >
+                    Entendido, Volver a intentar
+                  </button>
+                </div>
+              ) : (
+                <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-xs py-3 px-4 rounded-xl font-medium">
+                  {authError}
+                </div>
+              )
             )}
 
             <button
@@ -377,11 +533,19 @@ export default function App() {
           </div>
 
           <button
-            onClick={signInWithGoogle}
+            onClick={handleGoogleSignIn}
             className="w-full bg-white/5 border border-white/5 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-3 hover:bg-white/10 transition-all duration-300 active:scale-[0.98] cursor-pointer"
           >
             <img src="https://www.google.com/favicon.ico" className="w-5 h-5" alt="Google" />
             GOOGLE
+          </button>
+
+          <button
+            onClick={handleLocalMode}
+            className="w-full mt-3 bg-[#ffcc00]/10 border border-[#ffcc00]/20 hover:border-[#ffcc00]/40 text-[#ffcc00] font-black py-4 rounded-2xl flex items-center justify-center gap-2.5 hover:bg-[#ffcc00]/20 transition-all duration-300 active:scale-[0.98] cursor-pointer uppercase text-xs tracking-wider"
+          >
+            <Sparkles size={16} className="text-[#ffcc00] fill-[#ffcc00]" />
+            Usar de Manera Individual (Sin Cuenta)
           </button>
           
           <p className="mt-8 text-xs text-slate-500 font-medium">
@@ -461,7 +625,7 @@ export default function App() {
               </div>
             </div>
             <button 
-              onClick={() => signOut(auth)}
+              onClick={handleSignOut}
               className="p-2 text-slate-500 hover:text-red-400 transition-colors"
               title="Cerrar Sesión"
             >
@@ -490,7 +654,7 @@ export default function App() {
 
       {/* Mobile Bottom Navigation */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 h-20 bg-[#0a0a0a] border-t border-white/5 flex items-center justify-around px-2 z-50">
-         {navigation.slice(0, 5).map((item) => (
+         {navigation.slice(0, 6).map((item) => (
            <button
             key={item.id}
             onClick={() => {
@@ -508,6 +672,9 @@ export default function App() {
            </button>
          ))}
       </div>
+
+      {/* Floating AI Assistant Coach */}
+      <AICoach habits={habits} goals={goals} user={user} />
     </div>
   );
 }

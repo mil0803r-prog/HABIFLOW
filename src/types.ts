@@ -100,3 +100,10 @@ export interface Reward {
   triggerType?: 'diario' | 'semanal' | 'trimestral' | 'anual';
   category?: string;
 }
+
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'model';
+  text: string;
+  timestamp: string;
+}

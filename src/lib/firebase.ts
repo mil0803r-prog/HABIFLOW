@@ -11,7 +11,7 @@ import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
+export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId); /* CRITICAL: The app will break without this line */
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
@@ -62,16 +62,23 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
   throw new Error(JSON.stringify(errInfo));
 }
 
-// CRITICAL: Test connection to Firestore
-async function testConnection() {
-  try {
-    await getDocFromServer(doc(db, '_connection_test_', 'ping'));
-    console.log("Firebase connection established successfully.");
-  } catch (error) {
-    console.error("Firebase connection error details:", error);
-    if (error instanceof Error) {
-      if (error.message.includes('offline') || error.message.includes('insufficient permissions')) {
-        console.warn("Firebase initialized but might have connectivity or permission issues.");
+// CRITICAL: Test connection to Firestore with retries
+async function testConnection(retries = 3) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      // Small delay before each attempt, longer for later ones
+      await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+      
+      await getDocFromServer(doc(db, '_connection_test_', 'ping'));
+      console.log("Firebase connection established successfully.");
+      return; // Success!
+    } catch (error) {
+      console.warn(`Firebase connection attempt ${i + 1} failed:`, error);
+      
+      if (i === retries - 1) {
+        if (error instanceof Error && error.message.toLowerCase().includes('offline')) {
+          console.warn("Please check your Firebase configuration. The client is currently offline or the database is initializing.");
+        }
       }
     }
   }
